@@ -84,10 +84,12 @@ Kinnitamata kuupäeva, kestust, hinda, sertifikaati, vanusepiiri või kvalifikat
 
 Sait tarnitakse GitHub Pages'ist. Tokeneid ega repo saladusi ei ole vaja.
 
-1. `main` haru push käivitab `.github/workflows/pages.yml`: `npm ci` → `npm test` → build → deploy.
-   Jooks lülitab Pages'i vajadusel ise sisse ja seab custom domain'i `dist/CNAME` failist.
-2. Repo → **Settings** → **Pages** → linnuke **Enforce HTTPS** (aktiveerub, kui GitHub on
-   sertifikaadi väljastanud). See on ainus käsitsi samm.
+1. Repo → **Settings** → **Pages** → **Source:** `GitHub Actions`. Seda ei saa workflow ise teha —
+   `GITHUB_TOKEN` tohib Pages'i deploy'da, aga mitte saiti luua.
+2. `main` haru push käivitab `.github/workflows/pages.yml`: `npm ci` → `npm test` → build → deploy.
+   Custom domain tuleb `dist/CNAME` failist.
+3. Repo → **Settings** → **Pages** → linnuke **Enforce HTTPS** (aktiveerub, kui GitHub on
+   sertifikaadi väljastanud).
 
 DNS on juba õige: apex osutab GitHub Pages'i IP-dele ja `www` on CNAME `meregrupp-cyber.github.io`
 peale. Build kirjutab `dist/CNAME` faili, seega custom domain püsib iga deploy'ga.

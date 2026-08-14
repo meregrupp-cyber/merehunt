@@ -50,7 +50,6 @@ test('deploy workflow builds, tests and needs no secrets', () => {
 
   assert.match(workflow, /pages: write/);
   assert.match(workflow, /id-token: write/);
-  assert.match(workflow, /enablement: true/, 'the run must switch Pages on by itself');
   assert.doesNotMatch(workflow, /secrets\./, 'the Pages deploy must not depend on repository secrets');
   assert.match(workflow, /node tools\/verify-live\.mjs/);
 });
