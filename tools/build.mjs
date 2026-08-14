@@ -14,6 +14,13 @@ rmSync(distDir, { recursive: true, force: true });
 mkdirSync(distDir, { recursive: true });
 cpSync(publicDir, distDir, { recursive: true });
 
+// GitHub Pages ei luba oma vastusepäiseid, seetõttu tuleb CSP meta-tag'ina.
+// Välja on meelega jäetud kaks direktiivi:
+//   frame-ancestors — meta-tag'is on see niikuinii ignoreeritud;
+//   upgrade-insecure-requests — kõik viited on suhtelised ja Pages sunnib HTTPS-i niigi,
+//     aga WebKit upgrade'ib selle peale ka http://127.0.0.1 preview päringud ja sait laguneb.
+const CSP = "default-src 'self'; base-uri 'self'; object-src 'none'; img-src 'self' data:; font-src 'self'; style-src 'self'; script-src 'self'; connect-src 'none'; form-action 'none'";
+
 const plain = (value) => String(value).replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
 const attr = (value) => String(value)
   .replace(/&/g, '&amp;')
@@ -28,6 +35,7 @@ function head(page, { indexable = true } = {}) {
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="${CSP}" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${page.title}</title>
   <meta name="description" content="${attr(page.description)}" />
@@ -197,6 +205,34 @@ ${footer()}
 `;
 }
 
+// Vana /forum/* asemel ei saa GitHub Pages'ist 301-vastust, seega tuleb suunata lehe enda seest.
+function renderLegacyRedirect() {
+  const target = '/merehunt/';
+  return `<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="${CSP}" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="refresh" content="0; url=${target}" />
+  <title>Форум Merehunt переехал | Merehunt</title>
+  <meta name="robots" content="noindex, follow" />
+  <link rel="stylesheet" href="/assets/css/fonts.css" />
+  <link rel="stylesheet" href="/assets/css/site.css" />
+</head>
+<body class="page-404">
+<main id="content" class="not-found">
+  <div class="inner narrow">
+    <h1>Форум Merehunt больше не работает</h1>
+    <p class="lede">Материалы о фридайвинге и подводной охоте собраны на отдельной странице.</p>
+    <div class="hero-actions"><a class="btn btn-primary" href="${target}">Открыть страницу</a></div>
+  </div>
+</main>
+</body>
+</html>
+`;
+}
+
 function write(relativePath, contents) {
   const destination = join(distDir, relativePath);
   mkdirSync(dirname(destination), { recursive: true });
@@ -205,6 +241,11 @@ function write(relativePath, contents) {
 
 for (const page of pages) write(page.output, renderPage(page));
 write('404.html', render404());
+write('forum/index.html', renderLegacyRedirect());
+
+// GitHub Pages hoiab custom domain'i CNAME failis; ilma selleta kaob domeen deploy'ga ära.
+write('CNAME', `${new URL(BASE).hostname}\n`);
+write('.nojekyll', '');
 
 write('robots.txt', `User-agent: *\nAllow: /\n\nSitemap: ${BASE}/sitemap.xml\n`);
 
@@ -251,7 +292,7 @@ write('site.webmanifest', JSON.stringify({
   ],
 }, null, 2) + '\n');
 
-const expected = ['index.html', '404.html', 'robots.txt', 'sitemap.xml', 'llms.txt'];
+const expected = ['index.html', '404.html', 'robots.txt', 'sitemap.xml', 'llms.txt', 'CNAME', 'forum/index.html'];
 for (const file of expected) {
   if (!existsSync(join(distDir, file))) throw new Error(`Build did not create ${file}`);
 }
