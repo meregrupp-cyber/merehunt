@@ -98,6 +98,24 @@ npm run deploy:dry
 npm run deploy
 ```
 
-Tokenit ei salvestata reposse. GitHubi CI ei deploy production’isse ega vaja Cloudflare’i saladusi.
+Tokenit ei salvestata reposse. CI-s teeb deploy’d `.github/workflows/deploy.yml`, mis käivitub `main`
+haru push’il või käsitsi ning kasutab GitHubi salajasi väärtusi `CLOUDFLARE_API_TOKEN` ja
+`CLOUDFLARE_ACCOUNT_ID`. Ilma nendeta deploy ei käivitu; `ci.yml` build ja testid töötavad edasi
+ilma Cloudflare’i saladusteta.
+
+## HTTPS
+
+Tsooni HTTPS-seaded lülitatakse sisse skriptiga, mitte käsitsi klikkides:
+
+```bash
+CLOUDFLARE_API_TOKEN=... npm run https:check    # ainult kontroll
+CLOUDFLARE_API_TOKEN=... npm run https:enable   # rakendab
+npm run verify:live                             # live-kontroll pärast deploy'd
+```
+
+Skript seab Full (strict) režiimi, Always Use HTTPS-i, Automatic HTTPS Rewrites’i, minimaalse
+TLS 1.2 ja TLS 1.3 ning aastase HSTS-i koos alamdomeenidega. HTTPS-i sund on kahekihiline: lisaks
+tsooni seadetele suunab ka Worker ise HTTP ja www päringud 308-ga apexi HTTPS-ile. Domeeni
+üleviimine, tokeni õigused ja tõrkeotsing on kirjas failis `docs/https-setup.md`.
 
 Pärast deploy’d järgi `docs/release-checklist.md` kontrolli. Sisu päritolu ja terminoloogiaallikad on failis `docs/sources.md` ning avalike väidete piirid failis `docs/content-policy.md`.

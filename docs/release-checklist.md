@@ -13,10 +13,21 @@
 ## Deploy
 
 - `npx wrangler whoami`
+- kontrolli, et `merehunt.ee` ja `www.merehunt.ee` DNS-kirjed ei osuta vanale sihtkohale
+  (vt `docs/https-setup.md`)
 - `npm run deploy`
 - oota, kuni custom domain’i sertifikaat ja DNS on aktiivsed
+- `CLOUDFLARE_API_TOKEN=... npm run https:enable`
 
 ## Live kontroll
+
+Automaatne kontroll käib kogu alloleva loendi HTTP-osa läbi:
+
+```bash
+npm run verify:live
+```
+
+Käsitsi samad päringud:
 
 ```bash
 curl -I https://merehunt.ee/

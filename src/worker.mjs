@@ -4,7 +4,7 @@ const LEGACY_PATHS = [
 ];
 
 export const SECURITY_HEADERS = Object.freeze({
-  'Strict-Transport-Security': 'max-age=31536000',
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
   'Content-Security-Policy': "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; img-src 'self' data:; font-src 'self'; style-src 'self'; script-src 'self'; connect-src 'none'; form-action 'none'; upgrade-insecure-requests",
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
