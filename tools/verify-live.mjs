@@ -9,6 +9,10 @@ import { BASE } from '../content/site.mjs';
 const baseArg = process.argv.slice(2).find((arg) => arg.startsWith('--base='));
 const base = baseArg ? baseArg.slice('--base='.length).replace(/\/$/, '') : BASE;
 const host = new URL(base).hostname;
+const canonicalHost = new URL(BASE).hostname;
+// Preview-host (workers.dev) serveerib sama Workerit, aga tal ei ole www-alamdomeeni
+// ega canonical-rolli, seetõttu jäävad mõned kontrollid vahele.
+const isCanonical = host === canonicalHost;
 
 const REQUIRED_HEADERS = [
   'content-security-policy',
@@ -39,8 +43,10 @@ async function head(url) {
   }
 }
 
+console.log(`Kontrollitav host: ${host}${isCanonical ? '' : ' (preview)'}\n`);
+
 const home = await head(`${base}/`);
-check('apex HTTPS vastab 200', home.status === 200, `status ${home.status}`);
+check(`${host} HTTPS vastab 200`, home.status === 200, `status ${home.status}`);
 
 const hsts = home.headers.get('strict-transport-security') ?? '';
 const maxAge = Number(/max-age=(\d+)/i.exec(hsts)?.[1] ?? 0);
@@ -56,14 +62,20 @@ const insecureLocation = insecure.headers.get('location') ?? '';
 check('HTTP suundub HTTPS-ile', insecure.status >= 300 && insecure.status < 400 && insecureLocation.startsWith('https://'),
   `status ${insecure.status}, location ${insecureLocation || 'puudub'}`);
 
-const www = await head(`https://www.${host}/rummu/?source=test`);
-check('www suundub apexile ja säilitab path’i ja query',
-  www.status === 308 && www.headers.get('location') === `https://${host}/rummu/?source=test`,
-  `status ${www.status}, location ${www.headers.get('location') ?? 'puudub'}`);
+if (isCanonical) {
+  const www = await head(`https://www.${host}/rummu/?source=test`);
+  check('www suundub apexile ja säilitab path’i ja query',
+    www.status === 308 && www.headers.get('location') === `https://${host}/rummu/?source=test`,
+    `status ${www.status}, location ${www.headers.get('location') ?? 'puudub'}`);
+} else {
+  check('preview-host on indekseerimise eest kaitstud',
+    /noindex/i.test(home.headers.get('x-robots-tag') ?? ''),
+    `x-robots-tag ${home.headers.get('x-robots-tag') ?? 'puudub'}`);
+}
 
 const legacy = await head(`${base}/forum/forums.php?forum=4`);
 check('/forum/* suundub 301-ga /merehunt/ lehele',
-  legacy.status === 301 && legacy.headers.get('location') === `https://${host}/merehunt/`,
+  legacy.status === 301 && legacy.headers.get('location') === `https://${canonicalHost}/merehunt/`,
   `status ${legacy.status}, location ${legacy.headers.get('location') ?? 'puudub'}`);
 
 for (const path of ['/robots.txt', '/sitemap.xml', '/kurs-fridajvinga/', '/rummu/', '/poezdka-v-estoniyu/', '/merehunt/']) {

@@ -11,8 +11,10 @@
     "test:e2e:full": "npm run build && node tests/e2e.mjs --full",
     "test:all": "npm test && npm run test:e2e",
     "dev": "npm run build && wrangler dev",
-    "deploy": "npm run build && wrangler deploy",
-    "deploy:dry": "npm run build && wrangler deploy --dry-run",
+    "deploy": "npm run build && wrangler deploy --env=\"\"",
+    "deploy:dry": "npm run build && wrangler deploy --dry-run --env=\"\"",
+    "deploy:production": "npm run build && wrangler deploy --env production",
+    "deploy:production:dry": "npm run build && wrangler deploy --dry-run --env production",
     "https:check": "node tools/cloudflare-https.mjs --check",
     "https:enable": "node tools/cloudflare-https.mjs",
     "verify:live": "node tools/verify-live.mjs"

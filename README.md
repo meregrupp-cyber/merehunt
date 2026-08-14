@@ -90,18 +90,23 @@ Kinnitamata kuupäeva, kestust, hinda, sertifikaati, vanusepiiri või kvalifikat
 
 Konfiguratsioon on `wrangler.jsonc` failis. See seob Workeri custom domain’idega `merehunt.ee` ja `www.merehunt.ee`; www suunatakse Workerist apexile.
 
-Autenditud keskkonnas:
+Deploy on kahefaasiline, et domeeni ei saaks kogemata üle võtta:
 
 ```bash
 npx wrangler whoami
-npm run deploy:dry
+npm run deploy:dry             # preview, ei puuduta merehunt.ee DNS-i
 npm run deploy
+npm run deploy:production:dry  # custom domain'id merehunt.ee ja www.merehunt.ee
+npm run deploy:production
 ```
+
+Top-level konfiguratsioonis ei ole ühtegi route’i; custom domain’id on ainult `env.production` all.
+Preview-hostil lisab Worker vastusele `X-Robots-Tag: noindex, nofollow`.
 
 Tokenit ei salvestata reposse. CI-s teeb deploy’d `.github/workflows/deploy.yml`, mis käivitub `main`
 haru push’il või käsitsi ning kasutab GitHubi salajasi väärtusi `CLOUDFLARE_API_TOKEN` ja
-`CLOUDFLARE_ACCOUNT_ID`. Ilma nendeta deploy ei käivitu; `ci.yml` build ja testid töötavad edasi
-ilma Cloudflare’i saladusteta.
+`CLOUDFLARE_ACCOUNT_ID`. Faas tuleb workflow sisendist või repo muutujast `DEPLOY_PHASE`,
+vaikimisi `preview`. `ci.yml` build ja testid töötavad edasi ilma Cloudflare’i saladusteta.
 
 ## HTTPS
 

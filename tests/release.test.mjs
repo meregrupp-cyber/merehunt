@@ -22,10 +22,10 @@ test('the content security policy upgrades insecure requests and forbids third-p
 
 test('deploy workflow tests before deploying and only runs from main', () => {
   assert.match(deployWorkflow, /branches: \[main\]/);
-  const steps = deployWorkflow.indexOf('- run: npm test');
-  const dryRun = deployWorkflow.indexOf('- run: npm run deploy:dry');
-  const deploy = deployWorkflow.indexOf('- run: npm run deploy\n');
-  assert.ok(steps > 0 && dryRun > steps && deploy > dryRun, 'deploy must follow npm test and deploy:dry');
+  const tests = deployWorkflow.indexOf('- run: npm test');
+  const dryRun = deployWorkflow.indexOf('name: Dry run');
+  const deploy = deployWorkflow.indexOf('name: Deploy preview');
+  assert.ok(tests > 0 && dryRun > tests && deploy > dryRun, 'deploy must follow npm test and a dry run');
 });
 
 test('deploy workflow reads Cloudflare credentials from secrets only', () => {
@@ -34,7 +34,14 @@ test('deploy workflow reads Cloudflare credentials from secrets only', () => {
   assert.doesNotMatch(deployWorkflow, /[A-Za-z0-9_-]{40,}/, 'workflow must not contain a literal token');
 });
 
-test('deploy workflow enables zone HTTPS and verifies the live site', () => {
-  assert.match(deployWorkflow, /node tools\/cloudflare-https\.mjs/);
-  assert.match(deployWorkflow, /node tools\/verify-live\.mjs/);
+test('deploy defaults to preview and never claims the domain implicitly', () => {
+  assert.match(deployWorkflow, /default: preview/);
+  assert.match(deployWorkflow, /PHASE: \$\{\{ github\.event\.inputs\.phase \|\| vars\.DEPLOY_PHASE \|\| 'preview' \}\}/);
+
+  for (const step of ['run: npm run deploy:production\n', 'node tools/cloudflare-https.mjs', 'node tools/verify-live.mjs\n']) {
+    const index = deployWorkflow.indexOf(step);
+    assert.ok(index > 0, `missing step: ${step}`);
+    const guard = deployWorkflow.lastIndexOf("if: env.PHASE == 'production'", index);
+    assert.ok(guard > 0 && index - guard < 200, `${step} must be guarded by the production phase`);
+  }
 });

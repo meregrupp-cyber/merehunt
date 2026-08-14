@@ -10,17 +10,24 @@
     "html_handling": "auto-trailing-slash",
     "run_worker_first": true
   },
-  "routes": [
-    {
-      "pattern": "merehunt.ee",
-      "custom_domain": true
-    },
-    {
-      "pattern": "www.merehunt.ee",
-      "custom_domain": true
-    }
-  ],
+  "workers_dev": true,
   "observability": {
     "enabled": false
+  },
+  "env": {
+    "production": {
+      "name": "merehunt-ru",
+      "workers_dev": false,
+      "routes": [
+        {
+          "pattern": "merehunt.ee",
+          "custom_domain": true
+        },
+        {
+          "pattern": "www.merehunt.ee",
+          "custom_domain": true
+        }
+      ]
+    }
   }
 }

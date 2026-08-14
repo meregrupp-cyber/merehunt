@@ -36,34 +36,53 @@ Loo Cloudflare’is API-token (My Profile → API Tokens → Create Token → Cu
 Tokenit ei salvestata reposse. CI kasutab GitHubi salajasi väärtusi `CLOUDFLARE_API_TOKEN` ja
 `CLOUDFLARE_ACCOUNT_ID` (Settings → Secrets and variables → Actions).
 
-## Lansseerimine
+## Lansseerimine kahes faasis
 
-### 1. Vabasta DNS
+Domeen jääb esialgu GitHub Pages’i peale, seetõttu on lansseerimine jagatud kaheks. Kumbki faas
+on eraldi käivitatav ja teine ei juhtu kogemata: `wrangler.jsonc` top-level konfiguratsioonis ei ole
+ühtegi route’i, custom domain’id on ainult `env.production` all.
 
-Cloudflare’i DNS-vaates kustuta `merehunt.ee` neli GitHub Pages’i A-kirjet ja `www.merehunt.ee`
-CNAME-kirje. Ilma selleta ei saa Wrangler custom domain’i luua — Cloudflare keeldub olemasoleva
-kirje ülekirjutamisest. Kui domeen on samal ajal seotud GitHub Pages’i projektiga, eemalda seal
-custom domain, et Pages ei taastaks kirjeid.
+| Faas | Käsk | Mida puudutab |
+|---|---|---|
+| preview | `npm run deploy` | ainult `merehunt-ru.<subdomain>.workers.dev` |
+| production | `npm run deploy:production` | custom domain’id `merehunt.ee` ja `www.merehunt.ee` |
 
-### 2. Deploy
-
-Autenditud keskkonnas:
+### Faas 1 — preview (DNS jääb puutumata)
 
 ```bash
 npx wrangler whoami
 npm test
 npm run deploy:dry
 npm run deploy
+npm run verify:live -- --base=https://merehunt-ru.<subdomain>.workers.dev
 ```
 
-Wrangler loob `wrangler.jsonc` põhjal custom domain’id `merehunt.ee` ja `www.merehunt.ee` ning
-lisab neile vajalikud proxy’tud DNS-kirjed. Sertifikaadi väljastus võtab tavaliselt mõne minuti,
-kuni umbes 15.
+Sait läheb elama workers.dev aadressil, `merehunt.ee` vastab endiselt GitHub Pages’ist ja midagi
+avalikult ei muutu. Worker lisab mitte-canonical hostidel vastusele `X-Robots-Tag: noindex, nofollow`,
+nii et preview ei jõua otsingutulemustesse. CI teeb sama automaatselt igal `main` haru push’il.
 
-CI-s teeb sama töö `.github/workflows/deploy.yml`, mis käivitub `main` haru push’il või
-käsitsi (workflow_dispatch).
+### Faas 2 — cutover (domeen läheb Workerile)
 
-### 3. Lülita HTTPS sisse
+1. **Vabasta DNS.** Cloudflare’i DNS-vaates kustuta `merehunt.ee` neli GitHub Pages’i A-kirjet ja
+   `www.merehunt.ee` CNAME-kirje. Ilma selleta ei saa Wrangler custom domain’i luua — Cloudflare
+   keeldub olemasoleva kirje ülekirjutamisest. Kui domeen on seotud GitHub Pages’i projektiga,
+   eemalda seal custom domain, et Pages ei taastaks kirjeid.
+2. **Deploy production’isse.**
+
+   ```bash
+   npm run deploy:production:dry
+   npm run deploy:production
+   ```
+
+   Wrangler loob custom domain’id `merehunt.ee` ja `www.merehunt.ee` ning lisab vajalikud proxy’tud
+   DNS-kirjed. Sertifikaadi väljastus võtab tavaliselt mõne minuti, kuni umbes 15.
+3. **Lülita HTTPS sisse** (järgmine peatükk) ja käivita `npm run verify:live`.
+
+CI-s teeb sama töö `.github/workflows/deploy.yml`. Faas valitakse workflow käivitamisel
+(Actions → Deploy → Run workflow → `production`) või püsivalt repo muutujaga `DEPLOY_PHASE`.
+Vaikeväärtus on `preview`, seega `main` haru push ei saa domeeni kogemata üle võtta.
+
+## Lülita HTTPS sisse
 
 ```bash
 CLOUDFLARE_API_TOKEN=... npm run https:enable
@@ -83,11 +102,15 @@ Skript on idempotentne: juba korras seaded jäetakse puutumata. Ainult kontrolli
 CLOUDFLARE_API_TOKEN=... npm run https:check
 ```
 
+Seaded mõjutavad ainult Cloudflare’i kaudu proxy’tud liiklust. Seni kuni `merehunt.ee` osutab
+DNS-only kirjetega GitHub Pages’ile, ei muuda skript avalikku käitumist — see valmistab cutover’i
+ette. Päriselt hakkab HTTPS domeenil tööle faasis 2.
+
 `preload` jäetakse teadlikult välja. Preload-nimekirja kandmine on praktikas raskesti tagasi
 pööratav ja seob kogu `merehunt.ee` tsooni, sealhulgas tulevased alamdomeenid, igaveseks HTTPS-iga.
 Lülita see sisse alles siis, kui apex ja kõik alamdomeenid on kuude kaupa stabiilselt HTTPS-il.
 
-### 4. Kontrolli tulemust
+## Kontrolli tulemust
 
 ```bash
 npm run verify:live

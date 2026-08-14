@@ -13,9 +13,13 @@ export const SECURITY_HEADERS = Object.freeze({
   'Cross-Origin-Opener-Policy': 'same-origin',
 });
 
-function secured(response, pathname = '') {
+function secured(response, pathname = '', { indexable = true } = {}) {
   const headers = new Headers(response.headers);
   for (const [name, value] of Object.entries(SECURITY_HEADERS)) headers.set(name, value);
+
+  // Preview-hostid (workers.dev) serveerivad sama sisu, mille canonical osutab apexile.
+  // Otsimootoritele öeldakse selgelt, et neid hoste ei indekseerita.
+  if (!indexable) headers.set('X-Robots-Tag', 'noindex, nofollow');
 
   if (!headers.has('Cache-Control')) {
     const isDocument = !pathname.includes('.') || pathname.endsWith('.html') || pathname.endsWith('.xml') || pathname.endsWith('.txt');
@@ -55,6 +59,6 @@ export default {
     }
 
     const response = await env.ASSETS.fetch(request);
-    return secured(response, url.pathname);
+    return secured(response, url.pathname, { indexable: url.hostname.toLowerCase() === CANONICAL_HOST });
   },
 };
