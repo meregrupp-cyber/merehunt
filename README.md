@@ -84,10 +84,10 @@ Kinnitamata kuupäeva, kestust, hinda, sertifikaati, vanusepiiri või kvalifikat
 
 Sait tarnitakse GitHub Pages'ist. Tokeneid ega repo saladusi ei ole vaja.
 
-1. Repo → **Settings** → **Pages** → **Source:** `GitHub Actions`.
-2. `main` haru push käivitab `.github/workflows/pages.yml`: `npm ci` → `npm test` → build → deploy.
-3. Repo → **Settings** → **Pages** → **Custom domain:** `merehunt.ee` → **Save**, seejärel pane
-   linnuke **Enforce HTTPS** (aktiveerub, kui GitHub on sertifikaadi väljastanud).
+1. `main` haru push käivitab `.github/workflows/pages.yml`: `npm ci` → `npm test` → build → deploy.
+   Jooks lülitab Pages'i vajadusel ise sisse ja seab custom domain'i `dist/CNAME` failist.
+2. Repo → **Settings** → **Pages** → linnuke **Enforce HTTPS** (aktiveerub, kui GitHub on
+   sertifikaadi väljastanud). See on ainus käsitsi samm.
 
 DNS on juba õige: apex osutab GitHub Pages'i IP-dele ja `www` on CNAME `meregrupp-cyber.github.io`
 peale. Build kirjutab `dist/CNAME` faili, seega custom domain püsib iga deploy'ga.

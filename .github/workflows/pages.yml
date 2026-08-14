@@ -1,7 +1,8 @@
 name: Pages
 
 # Deploy GitHub Pages'i. Saladusi ei ole vaja — GitHub annab jooksule õigused ise.
-# Eeldab, et repo Settings → Pages → Source on "GitHub Actions".
+# Pages lülitatakse vajadusel sisse jooksu enda poolt (configure-pages enablement),
+# nii et repo seadetes ei ole vaja midagi käsitsi valida.
 
 on:
   push:
@@ -33,6 +34,8 @@ jobs:
       - run: npm ci
       - run: npm test
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
