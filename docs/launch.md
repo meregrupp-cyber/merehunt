@@ -57,8 +57,7 @@ Kui domeen on kirjas mõne teise repo Pages'i seadetes, tuleb see seal enne eema
 npm run verify:live
 ```
 
-Kontrollitakse: avaleht 200, CSP meta-tag vastuses, HSTS päis (ehk „Enforce HTTPS" on peal),
-HTTP → HTTPS, www → apex, `/forum/` viib `/merehunt/` lehele, kõik viis lehte ja `robots.txt`
+Kontrollitakse: avaleht 200, CSP meta-tag vastuses, HTTP → HTTPS, www → apex, `/forum/` viib `/merehunt/` lehele, kõik viis lehte ja `robots.txt`
 ning `sitemap.xml` vastavad 200, tundmatu URL vastab 404. Sama käivitub automaatselt iga deploy
 lõpus. Ebaõnnestumisel on iga viga eraldi real ja käsk lõpeb veakoodiga.
 
@@ -77,7 +76,10 @@ Sellest tulenevad kaks lahendust:
   `/merehunt/` lehele, on `noindex` ja sisaldab ka nähtavat linki, kui suunamine on blokeeritud.
   Sitemap'i see leht ei jõua.
 
-HSTS-i saadab GitHub ise, kui **Enforce HTTPS** on peal.
+- **HSTS-i ei ole.** GitHub saadab `Strict-Transport-Security` päise ainult `*.github.io` hostidel.
+  Custom domain'il ei tule seda päist ka siis, kui **Enforce HTTPS** on peal — see seade annab
+  HTTP → HTTPS suunamise (301), mitte HSTS-i. Brauser ei jäta seega HTTPS-i nõuet meelde ja esimene
+  päring võib ikka üle HTTP alata. Kui HSTS on nõue, tuleb ette panna oma CDN või reverse proxy.
 
 ## Tõrkeotsing
 

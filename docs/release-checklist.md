@@ -43,7 +43,7 @@ Oodatav:
 - www suundub apexile;
 - `/forum/` vastab 200 ja suunab `meta refresh` abil `/merehunt/` lehele;
 - tundmatu URL vastab 404;
-- vastusel on GitHubi HSTS päis ja HTML-i `<head>` sees CSP meta-tag;
+- HTML-i `<head>` sees on CSP meta-tag (HSTS päist GitHub Pages custom domain'il ei saada);
 - `robots.txt` lubab indekseerimise ja viitab apex sitemap’ile;
 - sitemap’i kõik viis URL-i vastavad 200 ja canonical iseendale;
 - avalikus HTML-is pole vorme, jälgimist ega linke keelatud domeenidele;
