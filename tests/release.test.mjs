@@ -34,9 +34,10 @@ test('deploy workflow reads Cloudflare credentials from secrets only', () => {
   assert.doesNotMatch(deployWorkflow, /[A-Za-z0-9_-]{40,}/, 'workflow must not contain a literal token');
 });
 
-test('deploy defaults to preview and never claims the domain implicitly', () => {
-  assert.match(deployWorkflow, /default: preview/);
-  assert.match(deployWorkflow, /PHASE: \$\{\{ github\.event\.inputs\.phase \|\| vars\.DEPLOY_PHASE \|\| 'preview' \}\}/);
+test('deploy targets production by default and keeps preview available', () => {
+  assert.match(deployWorkflow, /default: production/);
+  assert.match(deployWorkflow, /PHASE: \$\{\{ github\.event\.inputs\.phase \|\| vars\.DEPLOY_PHASE \|\| 'production' \}\}/);
+  assert.match(deployWorkflow, /- preview/, 'preview must stay selectable for domain-free test deploys');
 
   for (const step of ['run: npm run deploy:production\n', 'node tools/cloudflare-https.mjs', 'node tools/verify-live.mjs\n']) {
     const index = deployWorkflow.indexOf(step);

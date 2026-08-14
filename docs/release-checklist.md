@@ -13,9 +13,8 @@
 ## Deploy
 
 - `npx wrangler whoami`
-- preview: `npm run deploy` ja `npm run verify:live -- --base=<workers.dev URL>`
-- cutover’i eel kontrolli, et `merehunt.ee` ja `www.merehunt.ee` DNS-kirjed ei osuta vanale
-  sihtkohale (vt `docs/https-setup.md`)
+- kustuta Cloudflare’i DNS-ist vanad GitHub Pages’i kirjed: `merehunt.ee` neli A-kirjet ja
+  `www.merehunt.ee` CNAME (vt `docs/https-setup.md`)
 - `npm run deploy:production`
 - oota, kuni custom domain’i sertifikaat ja DNS on aktiivsed
 - `CLOUDFLARE_API_TOKEN=... npm run https:enable`
