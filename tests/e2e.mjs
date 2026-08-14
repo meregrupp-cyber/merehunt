@@ -108,6 +108,11 @@ try {
             path: `${output}/home-${viewport.width}.png`,
             fullPage: true,
           });
+          await page.goto(`${base}/merehunt/`, { waitUntil: 'networkidle' });
+          await page.screenshot({
+            path: `${output}/merehunt-${viewport.width}.png`,
+            fullPage: true,
+          });
         }
         await context.close();
       }

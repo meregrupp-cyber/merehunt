@@ -152,7 +152,7 @@ function footer() {
       <p><span itemprop="legalName">${org.legalName}</span><br />Рег. код: <span itemprop="identifier">${org.registryCode}</span><br />EHIS ID: <span itemprop="identifier">${org.ehisId}</span></p>
     </div>
   </div>
-  <div class="footer-bottom"><span>© 2026 Meregrupp</span><a href="/merehunt/">История Merehunt</a></div>
+  <div class="footer-bottom"><span>© 2026 Meregrupp</span><a href="/merehunt/">Фридайвинг и подводная охота</a></div>
 </footer>`;
 }
 
@@ -187,8 +187,8 @@ ${header('')}
   <div class="inner narrow">
     <p class="eyebrow">Ошибка 404</p>
     <h1>Эта страница ушла под воду</h1>
-    <p class="lede">Возможно, вы открыли старую ссылку магазина или форума Merehunt. Старые разделы больше не работают, но нынешние варианты фридайвинга доступны на главной странице.</p>
-    <div class="hero-actions"><a class="btn btn-primary" href="/">Перейти на главную</a><a class="btn" href="/merehunt/">Что изменилось</a></div>
+    <p class="lede">Возможно, вы открыли старую ссылку Merehunt. На нынешнем сайте можно узнать, как навыки фридайвинга дополняют опыт подводной охоты, или выбрать подходящий формат обучения.</p>
+    <div class="hero-actions"><a class="btn btn-primary" href="/">Перейти на главную</a><a class="btn" href="/merehunt/">Фридайвинг и подводная охота</a></div>
   </div>
 </main>
 ${footer()}
