@@ -44,10 +44,10 @@ check('avaleht vastab 200', home.status === 200, `status ${home.status}`);
 const homeHtml = await home.text();
 check('CSP meta-tag on vastuses', /<meta http-equiv="Content-Security-Policy"/i.test(homeHtml), 'puudub');
 
-// GitHub Pages saadab HSTS-i siis, kui Settings → Pages → Enforce HTTPS on sisse lülitatud.
+// GitHub Pages saadab HSTS-i ainult *.github.io peal. Custom domain'il seda päist ei tule ka siis,
+// kui "Enforce HTTPS" on peal — see seade annab HTTP → HTTPS suunamise, mida kontrollitakse allpool.
 const hsts = home.headers.get('strict-transport-security');
-check('HTTPS on jõustatud (HSTS päis olemas)', Boolean(hsts), 'päis puudub — kontrolli "Enforce HTTPS" linnukest');
-if (hsts && !/includeSubDomains/i.test(hsts)) warn('HSTS ei kata alamdomeene', hsts);
+if (hsts) warn('HSTS päis on olemas', hsts);
 
 const insecure = await get(`http://${host}/`);
 const insecureLocation = insecure.headers.get('location') ?? '';
