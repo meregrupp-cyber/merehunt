@@ -15,7 +15,7 @@ Sait ei sõltu teistest Meregrupi veebidest. Avalikus build’is ei ole kontaktv
 | `/merehunt/` | allveejahi huvilisele suunatud freediving’u oskuste ja ohutuse maandumisleht |
 | `404.html` | venekeelne päris 404 |
 
-Vana teadaolev `/forum/*` URL-muster suunatakse 301-ga `/merehunt/` lehele. Tundmatuid URL-e ei suunata avalehele; need jäävad 404-ks.
+Vana teadaolev `/forum/` URL suunatakse `/merehunt/` lehele. Tundmatuid URL-e ei suunata avalehele; need jäävad 404-ks.
 
 ## Tehniline lahendus
 
@@ -23,14 +23,14 @@ Vana teadaolev `/forum/*` URL-muster suunatakse 301-ga `/merehunt/` lehele. Tund
 - üks faktide allikas `content/site.mjs`;
 - lehtede sisu ja metaandmed `content/pages.mjs`;
 - build-skript `tools/build.mjs`;
-- Cloudflare Workers Static Assets koos väikese delivery Workeriga `src/worker.mjs`;
+- tarne GitHub Pages'ist, deploy `.github/workflows/pages.yml` kaudu;
 - build-output `dist/` (gitignore’is);
 - kohalikud IBM Plex Sans, IBM Plex Mono ja Source Serif 4 kirillitsa/ladina WOFF2 alamkomplektid;
 - nähtava sisuga kattuvad Schema.org mikroandmed ilma inline JSON-LD-ta;
-- range CSP ja muud turvapäised Workerist;
+- range CSP iga lehe `<head>` sees meta-tag'ina;
 - sitemap, robots, `llms.txt` ja web manifest genereeritakse build’i käigus.
 
-Worker teeb ainult tarnekihi tööd: HTTPS/www canonical-redirect, kontrollitud legacy-redirect, turvapäised ning staatiliste varade serveerimine. See ei ole vormi- ega andmebackend.
+Tarnekiht on GitHub Pages: HTTPS-i sund, www → apex suunamine ja sertifikaat tulevad GitHubilt, ülejäänu on staatilised failid. Backendi ei ole.
 
 ## Kohalik töö
 
@@ -42,13 +42,7 @@ npm run build
 npm test
 ```
 
-Staatiline preview ilma Wranglerita:
-
-```bash
-node tools/serve.mjs
-```
-
-Cloudflare’i kohalik preview:
+Kohalik preview:
 
 ```bash
 npm run dev
@@ -86,43 +80,26 @@ Testid peatavad build’i, kui avalikku väljundisse jõuab vorm, jälgimiskood,
 
 Kinnitamata kuupäeva, kestust, hinda, sertifikaati, vanusepiiri või kvalifikatsiooni ei lisata kohatäitena. Event schema lisatakse alles koos päris avaliku sündmuse, kuupäeva ja nähtava sisuga.
 
-## Cloudflare’i deploy
+## Deploy ja HTTPS
 
-Konfiguratsioon on `wrangler.jsonc` failis. See seob Workeri custom domain’idega `merehunt.ee` ja `www.merehunt.ee`; www suunatakse Workerist apexile.
+Sait tarnitakse GitHub Pages'ist. Tokeneid ega repo saladusi ei ole vaja.
 
-Autenditud keskkonnas:
+1. Repo → **Settings** → **Pages** → **Source:** `GitHub Actions`.
+2. `main` haru push käivitab `.github/workflows/pages.yml`: `npm ci` → `npm test` → build → deploy.
+3. Repo → **Settings** → **Pages** → **Custom domain:** `merehunt.ee` → **Save**, seejärel pane
+   linnuke **Enforce HTTPS** (aktiveerub, kui GitHub on sertifikaadi väljastanud).
 
-```bash
-npx wrangler whoami
-npm run deploy:production:dry  # custom domain'id merehunt.ee ja www.merehunt.ee
-npm run deploy:production
-```
+DNS on juba õige: apex osutab GitHub Pages'i IP-dele ja `www` on CNAME `meregrupp-cyber.github.io`
+peale. Build kirjutab `dist/CNAME` faili, seega custom domain püsib iga deploy'ga.
 
-Enne esimest production-deploy’d tuleb Cloudflare’i DNS-ist kustutada vanad GitHub Pages’i kirjed,
-muidu ei saa Wrangler custom domain’i luua (`docs/https-setup.md`).
+HTTPS-i sund, `www` → apex suunamine ja sertifikaat tulevad GitHubilt. Kuna Pages ei saada
+omi vastusepäiseid, on CSP iga lehe `<head>` sees meta-tag'ina ja vana `/forum/` suunab
+`meta refresh` abil. Sammud, piirangud ja tõrkeotsing on failis `docs/launch.md`.
 
-Domeeni puutumata jättev testdeploy käib `npm run deploy` — see läheb ainult workers.dev alla.
-Custom domain’id on `env.production` all, top-level konfiguratsioonis ei ole ühtegi route’i, ja
-preview-hostil lisab Worker vastusele `X-Robots-Tag: noindex, nofollow`.
-
-Tokenit ei salvestata reposse. CI-s teeb deploy’d `.github/workflows/deploy.yml`, mis käivitub `main`
-haru push’il või käsitsi ning kasutab GitHubi salajasi väärtusi `CLOUDFLARE_API_TOKEN` ja
-`CLOUDFLARE_ACCOUNT_ID`. Faas tuleb workflow sisendist või repo muutujast `DEPLOY_PHASE`,
-vaikimisi `production`. `ci.yml` build ja testid töötavad edasi ilma Cloudflare’i saladusteta.
-
-## HTTPS
-
-Tsooni HTTPS-seaded lülitatakse sisse skriptiga, mitte käsitsi klikkides:
+Live-kontroll pärast deploy'd (käivitub ka automaatselt CI-s):
 
 ```bash
-CLOUDFLARE_API_TOKEN=... npm run https:check    # ainult kontroll
-CLOUDFLARE_API_TOKEN=... npm run https:enable   # rakendab
-npm run verify:live                             # live-kontroll pärast deploy'd
+npm run verify:live
 ```
-
-Skript seab Full (strict) režiimi, Always Use HTTPS-i, Automatic HTTPS Rewrites’i, minimaalse
-TLS 1.2 ja TLS 1.3 ning aastase HSTS-i koos alamdomeenidega. HTTPS-i sund on kahekihiline: lisaks
-tsooni seadetele suunab ka Worker ise HTTP ja www päringud 308-ga apexi HTTPS-ile. Domeeni
-üleviimine, tokeni õigused ja tõrkeotsing on kirjas failis `docs/https-setup.md`.
 
 Pärast deploy’d järgi `docs/release-checklist.md` kontrolli. Sisu päritolu ja terminoloogiaallikad on failis `docs/sources.md` ning avalike väidete piirid failis `docs/content-policy.md`.

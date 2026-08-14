@@ -1,26 +1,15 @@
 #!/usr/bin/env node
-// Kontrollib live-saidi HTTPS-tarnet pärast deploy’d (docs/release-checklist.md "Live kontroll").
+// Kontrollib live-saidi tarnet pärast GitHub Pages'i deploy'd (docs/release-checklist.md).
 //
 //   node tools/verify-live.mjs
 //   node tools/verify-live.mjs --base=https://merehunt.ee
 
+import { pages } from '../content/pages.mjs';
 import { BASE } from '../content/site.mjs';
 
 const baseArg = process.argv.slice(2).find((arg) => arg.startsWith('--base='));
 const base = baseArg ? baseArg.slice('--base='.length).replace(/\/$/, '') : BASE;
 const host = new URL(base).hostname;
-const canonicalHost = new URL(BASE).hostname;
-// Preview-host (workers.dev) serveerib sama Workerit, aga tal ei ole www-alamdomeeni
-// ega canonical-rolli, seetõttu jäävad mõned kontrollid vahele.
-const isCanonical = host === canonicalHost;
-
-const REQUIRED_HEADERS = [
-  'content-security-policy',
-  'x-content-type-options',
-  'referrer-policy',
-  'permissions-policy',
-  'x-frame-options',
-];
 
 const failures = [];
 
@@ -33,57 +22,57 @@ function check(name, condition, detail = '') {
   console.log(`✗ ${name}${detail ? ` — ${detail}` : ''}`);
 }
 
-async function head(url) {
+function warn(name, detail) {
+  console.log(`! ${name}${detail ? ` — ${detail}` : ''}`);
+}
+
+async function get(url, { redirect = 'manual' } = {}) {
   try {
-    return await fetch(url, { method: 'GET', redirect: 'manual', headers: { 'User-Agent': 'merehunt-release-check' } });
+    return await fetch(url, { redirect, headers: { 'User-Agent': 'merehunt-release-check' } });
   } catch (error) {
     failures.push(`${url} — päring ebaõnnestus: ${error.message}`);
     console.log(`✗ ${url} — päring ebaõnnestus: ${error.message}`);
-    return { status: 0, headers: new Headers() };
+    return { status: 0, headers: new Headers(), text: async () => '' };
   }
 }
 
-console.log(`Kontrollitav host: ${host}${isCanonical ? '' : ' (preview)'}\n`);
+console.log(`Kontrollitav host: ${host}\n`);
 
-const home = await head(`${base}/`);
-check(`${host} HTTPS vastab 200`, home.status === 200, `status ${home.status}`);
+const home = await get(`${base}/`);
+check('avaleht vastab 200', home.status === 200, `status ${home.status}`);
 
-const hsts = home.headers.get('strict-transport-security') ?? '';
-const maxAge = Number(/max-age=(\d+)/i.exec(hsts)?.[1] ?? 0);
-check('HSTS on vähemalt üks aasta', maxAge >= 31536000, hsts || 'päis puudub');
-check('HSTS katab alamdomeenid', /includesubdomains/i.test(hsts), hsts || 'päis puudub');
+const homeHtml = await home.text();
+check('CSP meta-tag on vastuses', /<meta http-equiv="Content-Security-Policy"/i.test(homeHtml), 'puudub');
 
-for (const header of REQUIRED_HEADERS) {
-  check(`päis ${header}`, home.headers.has(header), 'puudub');
-}
+// GitHub Pages saadab HSTS-i siis, kui Settings → Pages → Enforce HTTPS on sisse lülitatud.
+const hsts = home.headers.get('strict-transport-security');
+check('HTTPS on jõustatud (HSTS päis olemas)', Boolean(hsts), 'päis puudub — kontrolli "Enforce HTTPS" linnukest');
+if (hsts && !/includeSubDomains/i.test(hsts)) warn('HSTS ei kata alamdomeene', hsts);
 
-const insecure = await head(`http://${host}/`);
+const insecure = await get(`http://${host}/`);
 const insecureLocation = insecure.headers.get('location') ?? '';
-check('HTTP suundub HTTPS-ile', insecure.status >= 300 && insecure.status < 400 && insecureLocation.startsWith('https://'),
+check('HTTP suundub HTTPS-ile',
+  insecure.status >= 300 && insecure.status < 400 && insecureLocation.startsWith('https://'),
   `status ${insecure.status}, location ${insecureLocation || 'puudub'}`);
 
-if (isCanonical) {
-  const www = await head(`https://www.${host}/rummu/?source=test`);
-  check('www suundub apexile ja säilitab path’i ja query',
-    www.status === 308 && www.headers.get('location') === `https://${host}/rummu/?source=test`,
-    `status ${www.status}, location ${www.headers.get('location') ?? 'puudub'}`);
-} else {
-  check('preview-host on indekseerimise eest kaitstud',
-    /noindex/i.test(home.headers.get('x-robots-tag') ?? ''),
-    `x-robots-tag ${home.headers.get('x-robots-tag') ?? 'puudub'}`);
-}
+const www = await get(`https://www.${host}/`);
+const wwwLocation = www.headers.get('location') ?? '';
+check('www suundub apexile',
+  www.status >= 300 && www.status < 400 && wwwLocation.startsWith(`https://${host}`),
+  `status ${www.status}, location ${wwwLocation || 'puudub'}`);
 
-const legacy = await head(`${base}/forum/forums.php?forum=4`);
-check('/forum/* suundub 301-ga /merehunt/ lehele',
-  legacy.status === 301 && legacy.headers.get('location') === `https://${canonicalHost}/merehunt/`,
-  `status ${legacy.status}, location ${legacy.headers.get('location') ?? 'puudub'}`);
+const legacy = await get(`${base}/forum/`);
+const legacyHtml = legacy.status === 200 ? await legacy.text() : '';
+check('/forum/ viib /merehunt/ lehele',
+  legacy.status === 200 && /url=\/merehunt\//.test(legacyHtml),
+  `status ${legacy.status}`);
 
-for (const path of ['/robots.txt', '/sitemap.xml', '/kurs-fridajvinga/', '/rummu/', '/poezdka-v-estoniyu/', '/merehunt/']) {
-  const response = await head(`${base}${path}`);
+for (const path of ['/robots.txt', '/sitemap.xml', ...pages.map((page) => page.path)]) {
+  const response = await get(`${base}${path}`);
   check(`${path} vastab 200`, response.status === 200, `status ${response.status}`);
 }
 
-const missing = await head(`${base}/see-peab-olema-404/`);
+const missing = await get(`${base}/see-peab-olema-404/`);
 check('tundmatu URL vastab 404', missing.status === 404, `status ${missing.status}`);
 
 console.log('');
@@ -94,4 +83,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log('✓ Live HTTPS-tarne on korras.');
+console.log('✓ Live-sait on korras.');

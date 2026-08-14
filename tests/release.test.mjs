@@ -1,48 +1,53 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import test from 'node:test';
-import { SECURITY_HEADERS } from '../src/worker.mjs';
+import { pages } from '../content/pages.mjs';
+import { BASE } from '../content/site.mjs';
 
-const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
-const deployWorkflow = read('.github/workflows/deploy.yml');
+const root = resolve(new URL('../dist/', import.meta.url).pathname);
+const dist = (file) => readFileSync(join(root, file), 'utf8');
+const workflow = readFileSync(new URL('../.github/workflows/pages.yml', import.meta.url), 'utf8');
+const htmlFiles = [...pages.map((page) => page.output), '404.html', 'forum/index.html'];
 
-test('HSTS is a full year and covers subdomains', () => {
-  const hsts = SECURITY_HEADERS['Strict-Transport-Security'];
-  const maxAge = Number(/max-age=(\d+)/.exec(hsts)?.[1] ?? 0);
-  assert.ok(maxAge >= 31536000, `max-age is too short: ${hsts}`);
-  assert.match(hsts, /includeSubDomains/);
+test('the custom domain survives every deploy', () => {
+  assert.equal(dist('CNAME').trim(), new URL(BASE).hostname);
 });
 
-test('the content security policy upgrades insecure requests and forbids third-party origins', () => {
-  const csp = SECURITY_HEADERS['Content-Security-Policy'];
-  assert.match(csp, /upgrade-insecure-requests/);
-  assert.match(csp, /default-src 'self'/);
-  assert.doesNotMatch(csp, /https?:\/\//);
-});
-
-test('deploy workflow tests before deploying and only runs from main', () => {
-  assert.match(deployWorkflow, /branches: \[main\]/);
-  const tests = deployWorkflow.indexOf('- run: npm test');
-  const dryRun = deployWorkflow.indexOf('name: Dry run');
-  const deploy = deployWorkflow.indexOf('name: Deploy preview');
-  assert.ok(tests > 0 && dryRun > tests && deploy > dryRun, 'deploy must follow npm test and a dry run');
-});
-
-test('deploy workflow reads Cloudflare credentials from secrets only', () => {
-  assert.match(deployWorkflow, /CLOUDFLARE_API_TOKEN: \$\{\{ secrets\.CLOUDFLARE_API_TOKEN \}\}/);
-  assert.match(deployWorkflow, /CLOUDFLARE_ACCOUNT_ID: \$\{\{ secrets\.CLOUDFLARE_ACCOUNT_ID \}\}/);
-  assert.doesNotMatch(deployWorkflow, /[A-Za-z0-9_-]{40,}/, 'workflow must not contain a literal token');
-});
-
-test('deploy targets production by default and keeps preview available', () => {
-  assert.match(deployWorkflow, /default: production/);
-  assert.match(deployWorkflow, /PHASE: \$\{\{ github\.event\.inputs\.phase \|\| vars\.DEPLOY_PHASE \|\| 'production' \}\}/);
-  assert.match(deployWorkflow, /- preview/, 'preview must stay selectable for domain-free test deploys');
-
-  for (const step of ['run: npm run deploy:production\n', 'node tools/cloudflare-https.mjs', 'node tools/verify-live.mjs\n']) {
-    const index = deployWorkflow.indexOf(step);
-    assert.ok(index > 0, `missing step: ${step}`);
-    const guard = deployWorkflow.lastIndexOf("if: env.PHASE == 'production'", index);
-    assert.ok(guard > 0 && index - guard < 200, `${step} must be guarded by the production phase`);
+test('every page carries the content security policy GitHub Pages cannot send as a header', () => {
+  for (const file of htmlFiles) {
+    const html = dist(file);
+    const csp = html.match(/<meta http-equiv="Content-Security-Policy" content="([^"]+)"/)?.[1];
+    assert.ok(csp, `${file} has no CSP meta tag`);
+    assert.match(csp, /default-src 'self'/);
+    assert.match(csp, /upgrade-insecure-requests/);
+    assert.match(csp, /form-action 'none'/);
+    assert.doesNotMatch(csp, /https?:\/\//, `${file} CSP allows a third-party origin`);
+    assert.doesNotMatch(csp, /frame-ancestors/, `${file} CSP uses a directive meta tags ignore`);
   }
+});
+
+test('the old forum URL lands on the merehunt page without being indexed', () => {
+  const html = dist('forum/index.html');
+  assert.match(html, /<meta http-equiv="refresh" content="0; url=\/merehunt\/"/);
+  assert.match(html, /<meta name="robots" content="noindex/);
+  assert.match(html, /<a class="btn btn-primary" href="\/merehunt\/">/, 'needs a working link when refresh is blocked');
+  assert.doesNotMatch(html, /<link rel="canonical"/, 'a redirect stub must not claim a canonical URL');
+});
+
+test('the redirect stub stays out of the sitemap', () => {
+  assert.doesNotMatch(dist('sitemap.xml'), /\/forum\//);
+});
+
+test('deploy workflow builds, tests and needs no secrets', () => {
+  assert.match(workflow, /branches: \[main\]/);
+  const tests = workflow.indexOf('- run: npm test');
+  const upload = workflow.indexOf('actions/upload-pages-artifact');
+  const deploy = workflow.indexOf('actions/deploy-pages');
+  assert.ok(tests > 0 && upload > tests && deploy > upload, 'deploy must follow npm test and the artifact upload');
+
+  assert.match(workflow, /pages: write/);
+  assert.match(workflow, /id-token: write/);
+  assert.doesNotMatch(workflow, /secrets\./, 'the Pages deploy must not depend on repository secrets');
+  assert.match(workflow, /node tools\/verify-live\.mjs/);
 });

@@ -30,8 +30,8 @@ Avalik tekst parafraseerib ainult põhifakti: Rummus tegutsesid lubjakivikarjä�
 
 ## Tehnilised esmased allikad
 
-- [Cloudflare Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/)
-- [Cloudflare Workers Custom Domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/)
+- [GitHub Pages — custom domains](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site)
+- [GitHub Pages — HTTPS enforcement](https://docs.github.com/en/pages/getting-started-with-github-pages/securing-your-github-pages-site-with-https)
 - [Google Searchi AI-funktsioonid](https://developers.google.com/search/docs/appearance/ai-features)
 - [OpenAI crawler’ite dokumentatsioon](https://developers.openai.com/api/docs/bots)
 - [Anthropic crawler’ite dokumentatsioon](https://support.claude.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler)
