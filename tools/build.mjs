@@ -15,8 +15,11 @@ mkdirSync(distDir, { recursive: true });
 cpSync(publicDir, distDir, { recursive: true });
 
 // GitHub Pages ei luba oma vastusepäiseid, seetõttu tuleb CSP meta-tag'ina.
-// frame-ancestors on meelega välja jäetud: meta-tag'is on see direktiiv niikuinii ignoreeritud.
-const CSP = "default-src 'self'; base-uri 'self'; object-src 'none'; img-src 'self' data:; font-src 'self'; style-src 'self'; script-src 'self'; connect-src 'none'; form-action 'none'; upgrade-insecure-requests";
+// Välja on meelega jäetud kaks direktiivi:
+//   frame-ancestors — meta-tag'is on see niikuinii ignoreeritud;
+//   upgrade-insecure-requests — kõik viited on suhtelised ja Pages sunnib HTTPS-i niigi,
+//     aga WebKit upgrade'ib selle peale ka http://127.0.0.1 preview päringud ja sait laguneb.
+const CSP = "default-src 'self'; base-uri 'self'; object-src 'none'; img-src 'self' data:; font-src 'self'; style-src 'self'; script-src 'self'; connect-src 'none'; form-action 'none'";
 
 const plain = (value) => String(value).replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
 const attr = (value) => String(value)

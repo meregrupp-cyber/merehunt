@@ -67,7 +67,9 @@ Sellest tulenevad kaks lahendust:
 - **CSP** on iga lehe `<head>` sees `<meta http-equiv="Content-Security-Policy">` tag'ina.
   `frame-ancestors` on välja jäetud, sest meta-tag'is on see direktiiv niikuinii ignoreeritud.
   Clickjacking'u vastu ei ole seetõttu `X-Frame-Options` kaitset — staatilisel infolehel on see
-  väike risk.
+  väike risk. Ka `upgrade-insecure-requests` on välja jäetud: kõik viited on suhtelised ja Pages
+  sunnib HTTPS-i niigi, aga WebKit upgrade'iks selle peale ka kohaliku `http://127.0.0.1` preview
+  päringud, mis lõhub `npm run dev` ja brauseritestid.
 - **Vana `/forum/*`** ei saa 301-vastust. `/forum/` all on leht, mis suunab `meta refresh` abil
   `/merehunt/` lehele, on `noindex` ja sisaldab ka nähtavat linki, kui suunamine on blokeeritud.
   Sitemap'i see leht ei jõua.

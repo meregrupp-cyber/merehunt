@@ -20,10 +20,12 @@ test('every page carries the content security policy GitHub Pages cannot send as
     const csp = html.match(/<meta http-equiv="Content-Security-Policy" content="([^"]+)"/)?.[1];
     assert.ok(csp, `${file} has no CSP meta tag`);
     assert.match(csp, /default-src 'self'/);
-    assert.match(csp, /upgrade-insecure-requests/);
     assert.match(csp, /form-action 'none'/);
+    assert.match(csp, /object-src 'none'/);
     assert.doesNotMatch(csp, /https?:\/\//, `${file} CSP allows a third-party origin`);
     assert.doesNotMatch(csp, /frame-ancestors/, `${file} CSP uses a directive meta tags ignore`);
+    // WebKit upgrade'ib selle peale ka http://127.0.0.1 preview päringud ja sait laguneb.
+    assert.doesNotMatch(csp, /upgrade-insecure-requests/, `${file} CSP breaks the local preview`);
   }
 });
 
