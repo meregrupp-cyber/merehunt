@@ -11,7 +11,9 @@
 - Rummu toimub ainult sobivate ilma-, vee-, nähtavus- ja ligipääsuolude korral;
 - reisi planeerimise soovituslik horisont on 6–12 kuud;
 - kontaktid: e-post, telefon ja Facebook;
-- vana Merehundi pood ja foorum ei tööta enam.
+- Merehunt on tuttav varasemale venekeelsele allveejahi publikule;
+- allveejaht sisaldab korduvaid sukeldumisi hinge kinni hoides ning sellega kaasneb teadvusekaotuse ehk blackout’i risk;
+- freediving’u väljaõpe aitab mõista riskitegureid ning harjutada ohutuid võtteid, taastumishingamist ja väljaõppinud turvapaari tegevust; väljaõpe ei kõrvalda riski.
 
 ## Ilma uue kirjaliku kinnituseta keelatud
 
@@ -23,6 +25,7 @@
 - reaalsed kuupäevad või Event schema;
 - Rummu sügavus, nähtavus, temperatuur või garanteeritud ligipääs;
 - garanteeritud tulemus, hingamispeetuse aeg või sügavus;
+- lubadus, et teooria, kursus või kogemus välistab blackout’i või muudab üksinda sukeldumise ohutuks;
 - vastamise tähtaeg;
 - Tanieli reguleeritud meditsiiniline kutsenimetus;
 - arvustused, hinnangud või osalejate arv ilma päris allikata.

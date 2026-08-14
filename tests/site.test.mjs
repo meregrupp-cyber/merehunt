@@ -55,6 +55,18 @@ test('public build has no forms, tracking, inline code, stale promises or forbid
   }
 });
 
+test('spearfishing visitors receive a tactful skills and safety bridge', () => {
+  const publicText = htmlFiles.map(read).join('\n') + read('llms.txt');
+  const home = read('index.html');
+  const merehunt = read('merehunt/index.html');
+
+  assert.doesNotMatch(publicText, /Merehunt изменился|Старый магазин и форум закрыты|магазин и старый форум больше не работают|Старые магазин и форум больше не работают/i);
+  assert.match(home, /Подводная охота во многом опирается на фридайвинг/);
+  assert.match(merehunt, /Фридайвинг для <em>подводного охотника<\/em>/);
+  assert.match(merehunt, /Потеря сознания возможна при нырянии на задержке дыхания/);
+  assert.match(merehunt, /Напарник, который умеет страховать/);
+});
+
 test('every clickable http link is canonical self or the one allowed Facebook page', () => {
   for (const file of htmlFiles) {
     const html = read(file);

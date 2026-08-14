@@ -14,6 +14,14 @@ Terminoloogilise võrdluse allikas: [Molchanova kooli ja poe venekeelne sait](ht
 
 Saiti kasutati sõnakasutuse kontrolliks, mitte teksti kopeerimiseks. Avalikus tekstis on eelistatud näiteks `фридайвинг`, `обучение фридайвингу`, `компенсация давления`, `открытая вода`, `напарник`, `страховка на поверхности`, `гидрокостюм`, `ласты`, `маска и трубка`.
 
+## Hinge kinni hoidmise ja allveejahi ohutus
+
+- [Molchanova kool — „Фридайвинг на суше“](https://molchanova.school/tpost/c3h83j1pr1-fridaiving-na-sushe): venekeelsed terminid `потеря сознания (блэкаут)`, `гипоксия`, ohutu treeningu korraldus ja partnerlus;
+- [Molchanovs — väljaõppinud turvapaari nõuded](https://www.molchanovs.com/blogs/latest/5-things-you-absolutely-need-from-a-freediving-buddy): üksnes kaaslase kohalolekust ei piisa; turvapaar vajab väljaõpet ning päästepraktikat;
+- [Divers Alert Network — spearfishing safety](https://dan.org/alert-diver/article/public-safety-announcement-spearfishing-safety/): korduvad hinge kinni hoides sukeldumised allveejahil võivad soodustada blackout’i; soovitatud on tähelepanelik turvapaar ja freediving’u väljaõpe.
+
+Avalik tekst ei väida, et teooria või kursus kõrvaldab blackout’i ohu. Sõnastus piirneb riski mõistmise, ohtlike stsenaariumide vältimise ning praktiliste turva- ja abistamisoskuste õppimisega.
+
 ## Rummu faktikontroll
 
 Rummu ajaloo kontrollallikas: [Visit Estonia — Rummu quarry](https://visitestonia.com/en/rummu-quarry).

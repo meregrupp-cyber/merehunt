@@ -12,7 +12,7 @@ Sait ei sõltu teistest Meregrupi veebidest. Avalikus build’is ei ole kontaktv
 | `/kurs-fridajvinga/` | algaja Level 1 kursus |
 | `/rummu/` | ettevalmistusega freediver’i Rummu sukeldumine |
 | `/poezdka-v-estoniyu/` | Eestisse reisi planeerimine |
-| `/merehunt/` | vana poe ja foorumi külastaja üleminekuleht |
+| `/merehunt/` | allveejahi huvilisele suunatud freediving’u oskuste ja ohutuse maandumisleht |
 | `404.html` | venekeelne päris 404 |
 
 Vana teadaolev `/forum/*` URL-muster suunatakse 301-ga `/merehunt/` lehele. Tundmatuid URL-e ei suunata avalehele; need jäävad 404-ks.
