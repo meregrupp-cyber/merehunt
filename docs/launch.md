@@ -20,35 +20,33 @@ custom domain seadmata, mistõttu GitHub ei ole sertifikaati väljastanud.
 
 ## Lansseerimine
 
-### 1. Lülita Pages sisse
-
-Repo → **Settings** → vasakul **Pages**:
-
-- **Source:** `GitHub Actions`
-
-Salvestamist ei ole vaja, valik jõustub kohe.
-
-### 2. Merge
+### 1. Merge
 
 `main` haru push käivitab `.github/workflows/pages.yml`: `npm ci` → `npm test` → build → deploy.
 Esimene deploy võtab paar minutit.
 
-Build kirjutab `dist/CNAME` faili sisuga `merehunt.ee`, seega custom domain püsib iga deploy'ga.
+Pages lülitatakse vajadusel sisse jooksu enda poolt (`configure-pages` `enablement: true`),
+seega repo seadetes ei ole vaja **Source**-valikut käsitsi teha.
 
-### 3. Custom domain ja HTTPS
+Build kirjutab `dist/CNAME` faili sisuga `merehunt.ee`. Actions-deploy puhul loeb GitHub selle faili
+artefaktist ja seab custom domain'i ise, seega domeen püsib iga deploy'ga.
+
+### 2. Custom domain ja HTTPS
 
 Repo → **Settings** → **Pages**:
 
-- **Custom domain:** `merehunt.ee` → **Save**. GitHub kontrollib DNS-i (kirjed on juba õiged) ja
-  hakkab sertifikaati väljastama. Tavaliselt võtab see mõne minuti, mõnikord kuni tunni.
-- Kui sertifikaat on valmis, muutub aktiivseks **Enforce HTTPS** — pane linnuke.
+- **Custom domain** peaks pärast esimest deploy'd juba näitama `merehunt.ee` (tuleb `CNAME` failist).
+  Kui ei näita, sisesta see käsitsi ja vajuta **Save**. GitHub kontrollib DNS-i (kirjed on juba
+  õiged) ja hakkab sertifikaati väljastama; tavaliselt võtab see mõne minuti, mõnikord kuni tunni.
+- Kui sertifikaat on valmis, muutub aktiivseks **Enforce HTTPS** — pane linnuke. See on ainus samm,
+  mida API kaudu teha ei saa.
 
 Sellest hetkest suunab GitHub `http://` päringud HTTPS-ile ja `www.merehunt.ee` apexile.
 
 Kui domeen on kirjas mõne teise repo Pages'i seadetes, tuleb see seal enne eemaldada — GitHub lubab
 üht custom domain'i korraga ainult ühes repos.
 
-### 4. Kontrolli
+### 3. Kontrolli
 
 ```bash
 npm run verify:live
@@ -82,6 +80,6 @@ HSTS-i saadab GitHub ise, kui **Enforce HTTPS** on peal.
 |---|---|---|
 | Settings → Pages näitab „Domain's DNS record could not be verified" | DNS-i kontroll pole veel jõudnud | oota mõni minut ja vajuta uuesti **Save** |
 | **Enforce HTTPS** on hall | sertifikaat on veel väljastamisel | oota kuni tund, siis proovi uuesti |
-| Sait vastab 404-ga | Pages'i source ei ole `GitHub Actions` või deploy ei ole läbinud | vaata Actions → Pages jooksu |
+| Sait vastab 404-ga | deploy ei ole veel läbinud | vaata Actions → Pages jooksu |
 | Domeen kaob pärast deploy'd ära | `CNAME` fail puudub build'is | `npm run build && cat dist/CNAME` |
 | Custom domain'i ei saa salvestada | domeen on kasutusel teises repos | eemalda see teise repo Pages'i seadetest |
