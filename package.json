@@ -1,0 +1,28 @@
+{
+  "name": "merehunt-ru",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Venekeelne Meregrupi freediving'u veeb domeenile merehunt.ee",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "test": "npm run build && node --test tests/*.test.mjs",
+    "test:e2e": "npm run build && node tests/e2e.mjs",
+    "test:e2e:full": "npm run build && node tests/e2e.mjs --full",
+    "test:all": "npm test && npm run test:e2e",
+    "dev": "npm run build && wrangler dev",
+    "deploy": "npm run build && wrangler deploy",
+    "deploy:dry": "npm run build && wrangler deploy --dry-run"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@sparticuz/chromium": "^149.0.0",
+    "ajv": "^8.17.1",
+    "fontkit": "2.0.4",
+    "playwright": "^1.61.1",
+    "wrangler": "4.123.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
